@@ -1,0 +1,13 @@
+.Rproj.user
+.Rhistory
+.RData
+.Ruserdata
+
+# ds_store
+**/.DS_Store
+
+# tables
+**/tables
+
+# junk
+**/junk
