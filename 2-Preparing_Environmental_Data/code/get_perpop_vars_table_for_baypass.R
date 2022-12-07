@@ -4,7 +4,7 @@
 library(tidyverse)
 
 # read the persample table
-persample_table <- read.delim(file = "../tables/allvars_persample_table.tsv",
+persample_table <- read.delim(file = "2-Preparing_Environmental_Data/tables/allvars_persample_table.tsv",
                               header = T, sep = "\t") %>% column_to_rownames("sample")
 # define populations in alphabetical order for BayPass
 populations <- c("ca", "ki", "la", "mo", "tu", "ur", "vl", "ya")
@@ -32,8 +32,9 @@ for (pop in populations) {
 }
 
 # adjust format
-baypass_perpop_table <- baypass_perpop_table %>% column_to_rownames("vars") %>% setNames(populations)
+baypass_perpop_table <- baypass_perpop_table %>% column_to_rownames("vars") %>% 
+  setNames(populations) %>% rownames_to_column("vars")
 
 # save table
-write.table(x = baypass_perpop_table, file = "../tables/allvars_baypass_perpop_table.tsv", quote=FALSE,
-            col.names = T, row.names = T, sep= "\t")
+write.table(x = baypass_perpop_table, file = "2-Preparing_Environmental_Data/tables/allvars_baypass_perpop_table.tsv", quote=FALSE,
+            col.names = T, row.names = F, sep= "\t")
