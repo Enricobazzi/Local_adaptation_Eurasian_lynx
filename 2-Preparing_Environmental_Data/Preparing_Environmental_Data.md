@@ -12,3 +12,16 @@ The WorldClim data is easily downloaded using the raster package in R, but I nee
 With the data rasters ready I used another custom [R script](code/get_perpop_vars_table_for_baypass.R) to generate a table with each sample's value for each of the 21 variables (19 worldclim + 2 snow). Each sample's value was calculated as the average of the values in a circle of the area of 100km2 around the sample's coordinate point (see the [IUCN page](https://www.iucnredlist.org/species/12519/121707666#habitat-ecology) for references regarding home range sizes).
 
 As BayPass is a population based test (compared to the individual approach we adopt in the RDA), we need population averages for each of the variables, which were calculated and formatted as needed by BayPass using a custom [R script](code/get_perpop_vars_table_for_baypass.R).
+
+```
+cd /home/ebazzicalupo/Local_adaptation_Eurasian_lynx/2-Preparing_Environmental_Data/tables
+
+varLIST=($(cut -f1 allvars_baypass_perpop_table.tsv | grep -v "vars"))
+
+for var in ${varLIST[@]}
+ do
+  echo "creating ${var} table"
+  grep -w "${var}" allvars_baypass_perpop_table.tsv | cut -f2-  | tr '\t' ' ' \
+  > ${var}_data.txt
+done
+```
