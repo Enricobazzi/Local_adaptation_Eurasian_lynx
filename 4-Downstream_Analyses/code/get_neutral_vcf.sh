@@ -58,7 +58,7 @@ done
 # are found in table:
 rda_table=3-Identifying_Candidate_Loci/tables/vars_bio9-bio2-bio16-janmeandepth.cond_PC2.cand_sd.K3.candidates.tsv
 # that can be converted to bed
-rda_bed=vars_bio9-bio2-bio16-janmeandepth.cond_PC2.cand_sd.K3.candidates.bed
+rda_bed=3-Identifying_Candidate_Loci/tables/vars_bio9-bio2-bio16-janmeandepth.cond_PC2.cand_sd.K3.candidates.bed
 cat $rda_table | grep -v "snp" | cut -f2 | sed 's/"//g' | tr ':' '\t' | 
  rev |  cut -d'_' -f2- | rev |
  awk -v OFS='\t' '{print $1, $2-1, $2}' > $rda_bed
