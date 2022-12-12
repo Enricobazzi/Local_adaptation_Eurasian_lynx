@@ -17,7 +17,9 @@ nsamples=($(grep -m1 "#CHR" ${vcf} | tr '\t' '\n' | grep "_" | grep -vE "c_ll_ba
  -O ${vcf_final}
 
 # get the chromosome, position and alternative allele columns (for SNP IDs)
-grep -v "#" ${vcf_final} | cut -f 1,2,5 | sed 's/\t/:/' | sed 's/\t/_/' > chr_pos.tmp
+# grep -v "#" ${vcf_final} | cut -f 1,2,5 | sed 's/\t/:/' | sed 's/\t/_/' > chr_pos.tmp
+# get the chromosome and position (for SNP IDs)
+grep -v "#" ${vcf_final} | cut -f 1,2 | sed 's/\t/:/' > chr_pos.tmp
 
 # get the number of missing genotypes for each SNP
 grep -v "#" ${vcf_final} | cut -f8 | cut -d';' -f3 | 
