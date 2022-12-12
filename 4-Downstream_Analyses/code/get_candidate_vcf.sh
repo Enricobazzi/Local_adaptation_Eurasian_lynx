@@ -14,7 +14,7 @@ bedtools intersect -header \
     -b $sd_cand_bed \
     > $sd_cand_vcf
 
-# sd candidates:
+# qvals candidates:
 bedtools intersect -header \
     -a $vcf \
     -b $qvals_cand_bed \
