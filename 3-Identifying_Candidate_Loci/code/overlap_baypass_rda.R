@@ -67,15 +67,13 @@ outlier_snps_qvals$chromosome = chrs
 outlier_snps_qvals$position = poss
 
 ## add missing data
-miss_gts_sd = read.table(miss_gts_tsv) %>%
-  filter(V1 %in% outlier_snps_sd$snp)
+miss_gts = read.table(miss_gts_tsv)
 
-outlier_snps_sd$missing = miss_gts_sd$V2
+outlier_snps_sd$missing = miss_gts[which(
+  miss_gts$V1 %in% outlier_snps_sd$snp),2]
 
-miss_gts_qvals = read.table(miss_gts_tsv) %>%
-  filter(V1 %in% outlier_snps_qvals$snp)
-
-outlier_snps_qvals$missing = miss_gts_qvals$V2
+outlier_snps_qvals$missing = miss_gts[which(
+  miss_gts$V1 %in% outlier_snps_qvals$snp),2]
 
 
 ### ### ### ### ### ### ### ### ### ### ### ### ###
@@ -252,7 +250,7 @@ for (s in 1:nrow(outlier_snps_sd)){
     # candidate snp
     snp_ol = paste(snp_chr, min(ol$start), max(ol$end), sep = "_")
     snp_bed = data.frame(chr = snp_chr, position = snp_pos,
-                         load = snp_load, overlap = snp_ol,
+                         load = abs(snp_load), overlap = snp_ol,
                          missing = snp_miss)
     candidate_snps_sd_bed = rbind(candidate_snps_sd_bed, snp_bed)
     # candidate window
@@ -316,7 +314,7 @@ for (s in 1:nrow(outlier_snps_qvals)){
     # candidate snp
     snp_ol = paste(snp_chr, min(ol$start), max(ol$end), sep = "_")
     snp_bed = data.frame(chr = snp_chr, position = snp_pos,
-                         load = snp_load, overlap = snp_ol,
+                         load = abs(snp_load), overlap = snp_ol,
                          missing = snp_miss)
     candidate_snps_qvals_bed = rbind(candidate_snps_qvals_bed, snp_bed)
     # candidate window
@@ -341,7 +339,7 @@ write.table(overlap_qvals_win_nodup,
 # (are in same window and we keep the highest scoring without missing data)
 overlap_qvals_snps_nodup = candidate_snps_qvals_bed[order(candidate_snps_qvals_bed[,'overlap'],
                                                           candidate_snps_qvals_bed[,'missing'],
-                                                          -candidate_snps_qvals_bed[,'load']),]
+                                                         -candidate_snps_qvals_bed[,'load']),]
 overlap_qvals_snps_nodup = overlap_qvals_snps_nodup[!duplicated(overlap_qvals_snps_nodup$overlap),]
 
 # save table
@@ -361,3 +359,4 @@ write.table(overlap_qvals_snps_nodup_bed,
 
  ### ### ### ### ### ### 
 ### manhattan plots ####
+
