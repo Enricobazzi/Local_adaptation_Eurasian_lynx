@@ -21,7 +21,8 @@ varLIST=($(cut -f1 allvars_baypass_perpop_table.tsv | grep -v "vars"))
 for var in ${varLIST[@]}
  do
   echo "creating ${var} table"
-  grep -w "${var}" allvars_baypass_perpop_table.tsv | cut -f2-  | tr '\t' ' ' \
+  grep -w "${var}" allvars_baypass_perpop_table.tsv |
+  cut -f2-  | tr '\t' ' ' \
   > ${var}_data.txt
 done
 ```
