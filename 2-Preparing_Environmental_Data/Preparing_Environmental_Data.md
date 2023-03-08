@@ -5,6 +5,8 @@ date: "2022-10-17"
 output: html_document
 ---
 
+### Extracting and analyzing environmental data
+
 In this MD I will describe the way that I extracted and analyzed the environmental data for our study.
 
 The WorldClim data is easily downloaded using the raster package in R, but I needed to prepare the data for the two snow variables we were interested in, the average snow depth for the month of January and the yearly average number of days with snow cover. To do so, I downloaded snow depth data for from the Northern Hemisphere subset of the Canadian Meteorological Centre operational global daily snow depth analysis ([Brown, Ross & Brasnett, Bruce, 2010](https://nsidc.org/data/nsidc-0447/versions/1)) for the years bettween 1999 and 2018. Using a custom made [R script](code/create_snow_rasters.R) I transformed the daily data into rasters of the desired variables with the same coordinate system as the WorldClim data.
@@ -26,3 +28,7 @@ for var in ${varLIST[@]}
   > ${var}_data.txt
 done
 ```
+
+### BONUS: distribution map
+
+The script with which I drew the distribution map is [here](code/draw_sampling_map.R)!!
