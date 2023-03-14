@@ -9,6 +9,32 @@ library(qvalue)
 
 ############################################
 
+# load a dictionary for the variables
+var_dict <- c("bio1" = "T_mean_year",
+              "bio2" = "T_range_day",
+              "bio3" = "Iso_T",
+              "bio4" = "T_seasonalit",
+              "bio5" = "T_max_warm",
+              "bio6" = "T_min_cold",
+              "bio7" = "T_range_year",
+              "bio8" = "T_wet_quart",
+              "bio9" = "T_dry_quart",
+              "bio10" = "T_warm_quart",
+              "bio11" = "T_cold_quart",
+              "bio12" = "P_annual",
+              "bio13" = "P_wet_month",
+              "bio14" = "P_dry_month",
+              "bio15" = "P_seasonality",
+              "bio16" = "P_wet_quart",
+              "bio17" = "P_dry_quart",
+              "bio18" = "P_warm_quart",
+              "bio19" = "P_cold_quart",
+              "jan_mean_depth" = "Jan_mean_depth",
+              "mean_snow_days" = "Mean_snow_days",
+              "Geographic" = "Geographic",
+              "xCoord" = "x-coord",
+              "yCoord" = "y-coord")
+
 # load whole genome genetic data
 read_raw_file <- function(raw_file) {
   gt_data <- read.PLINK(raw_file)
@@ -64,15 +90,18 @@ run_rda <- function(gt_data, variables, vars_list, cond_list) {
 
 # plot amount of inertia per ordination axis
 plot_ord_x_inert_y <- function(plot_name, RDA){
-  pdf(plot_name, width = 8, height = 8)
-  plot = ggplot() +
-    geom_line(aes(x=c(1:length(RDA$CCA$eig)), y=as.vector(RDA$CCA$eig)), linetype="dotted",
-              size = 1.5, color="darkgrey") + geom_point(aes(x=c(1:length(RDA$CCA$eig)), y=as.vector(RDA$CCA$eig)), size = 3,
-                                                         color="darkgrey") +
-    scale_x_discrete(name = "Ordination axes", limits=c(1:9)) + ylab("Inertia") +
+  pdf(plot_name, width = 4, height = 4)
+  plot = ggplot() + 
+    geom_col(aes(x = c(1:length(RDA$CCA$eig)),
+                 y = as.vector(RDA$CCA$eig) / sum(as.vector(RDA$CCA$eig)) * 100)) +
+    scale_x_discrete(name = "Ordination axes", limits=c(1:length(RDA$CCA$eig))) +
+    ylab("Percentage of Constrained Variance") +
     theme_bw()
   print(plot)
   dev.off()
+  
+  constrained_percent = (RDA$CCA$eig / sum(RDA$CCA$eig)) * 100
+  unconstrained_percent = (RDA$CCA$eig / (sum(RDA$CCA$eig) + sum(RDA$CA$eig))) * 100
 }
 
 # outliers based on qvalue
@@ -322,7 +351,7 @@ plot_rda_snps_and_samples <- function(RDA, cand, x = 1, y = 2, plot_name){
   # assign a color to each predictor
   for (i in 1:length(vars)){
     var = vars[i]
-    col = brewer.pal(9, "Set1")[i] 
+    col = brewer.pal(8, "Set2")[i] 
     env[env==var] = col
   }
   # pull all the SNP names
@@ -348,6 +377,13 @@ plot_rda_snps_and_samples <- function(RDA, cand, x = 1, y = 2, plot_name){
   min_lim = -max(c(abs(sample_df[,x]), abs(sample_df[,y])))*1.1
   max_lim = max(c(abs(sample_df[,x]), abs(sample_df[,y])))*1.1
   
+  # variance explained by rda axes
+  rda_ax_expl_constrain = round(x = (RDA$CCA$eig / sum(RDA$CCA$eig)) * 100,
+                                digits = 2)
+  # rda_ax_expl_unconstrain = round(x = 
+  #                                   (RDA$CCA$eig / (sum(RDA$CCA$eig) + sum(RDA$CA$eig))) * 100,
+  #                               digits = 2)
+  
   # plot the RDA
   rda_plot <- ggplot() +
     geom_hline(yintercept=0, linetype="dashed", color = gray(.80), size=0.3) +
@@ -359,8 +395,9 @@ plot_rda_snps_and_samples <- function(RDA, cand, x = 1, y = 2, plot_name){
     geom_segment(aes(xend=TAB_var[,x]/2, yend=TAB_var[,y]/2, x=0, y=0),
                  colour="black", size=0.15, linetype=1,
                  arrow=arrow(length = unit(0.01, "npc"))) +
-    geom_text(aes(x=1.05*(TAB_var[,x]/2), y=1.05*(TAB_var[,y]/2), label = row.names(TAB_var)),
-              size = 2.5, family = "Times") +
+    geom_text(aes(x=1.05*(TAB_var[,x]/2), y=1.05*(TAB_var[,y]/2),
+                  label = as.vector(var_dict[row.names(TAB_var)])),
+              size = 4, family = "Times") +
     
     geom_point(aes(x = candidate_snps_df[,x] * 25, y = candidate_snps_df[,y] * 25),
                shape = 21, cex = 1.5, fill = candidate_snps_df$color, alpha = 0.8) +
@@ -368,15 +405,34 @@ plot_rda_snps_and_samples <- function(RDA, cand, x = 1, y = 2, plot_name){
     geom_point(aes(x = sample_df[,x], y = sample_df[,y]),
                shape = 21, cex = 3, fill = sample_df$color, alpha = 0.8) +
     
+    scale_x_continuous(expand = expansion(mult = 0.15)) +
+    scale_y_continuous(expand = expansion(mult = 0.15)) +
+    
     theme_bw(base_size = 14, base_family = "Times") +
     theme(panel.background = element_blank(), panel.grid = element_blank(),
           plot.background = element_blank()) +
     # xlim(min = min_lim, max = max_lim) +
     # ylim(min = min_lim, max = max_lim) +
-    xlab(paste("RDA", x)) + ylab(paste("RDA", y))
+    xlab(paste0("RDA ", x, " - ", rda_ax_expl_constrain[x], "%")) +
+    ylab(paste0("RDA ", y, " - ", rda_ax_expl_constrain[y], "%"))
+
+  ggsave(filename = plot_name, plot = rda_plot, width = 5, height = 5, units = "in")
   
-  ggsave(filename = plot_name, plot = rda_plot, width = 8, height = 8, units = "in")
-  
+  legend <- ggplot() +
+    geom_point(aes(x = 1:length(vars), y = 0),
+               shape = 21, cex = 10,
+               fill = brewer.pal(8, "Set2")[c(1:length(vars))]) +
+    geom_text(aes(x=1:length(vars), y=-0.05,
+                  label = as.vector(var_dict[unique(cand$predictor)])),
+              size = 4, family = "Times") +
+    scale_y_continuous(limits = c(-0.06, 0.01)) +
+    theme_bw() +
+    theme_void() + # remove background, grid, numeric labels
+    theme(panel.background = element_blank(),
+          # panel.grid = element_blank(),
+          plot.background = element_blank())
+  ggsave(filename = paste0(plot_name, ".legend.pdf"),
+         plot = legend, width = 10, height = 1, units = "in")
 }
 
 ######################################
