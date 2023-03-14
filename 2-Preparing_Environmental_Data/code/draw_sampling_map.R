@@ -46,7 +46,7 @@ values(empty) <- 0
 empty.crop <- crop(empty, extent)
 
 # land map with mountains from Natural Earth
-world_map <- raster("~/Downloads/HYP_HR_SR_W/HYP_HR_SR_W.tif")
+world_map <- raster("2-Preparing_Environmental_Data/tables/HYP_HR_SR_W/HYP_HR_SR_W.tif")
 world_map.crop <- crop(world_map, extent)
 
 # samples
