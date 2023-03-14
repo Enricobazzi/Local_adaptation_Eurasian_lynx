@@ -30,7 +30,8 @@ rda.0 <- rda (gt_data ~ 1, data = env.predictors[,-c(20,21)], scale=T) # model c
 rda.all <- rda (gt_data ~ ., data = env.predictors[,-c(20,21)], scale=T) # model including all variables from matrix chem1 (the dot after tilda (~) means ALL!)
 
 # ordi2step as in tutorial by Capblancq
-rda.sel <- ordiR2step(rda.0, rda.all, Pin = 0.01, R2permutations = 1000, R2scope = T, trace = 10)
+rda.sel <- ordiR2step(rda.0, rda.all, Pin = 0.01, R2permutations = 1000,
+                      R2scope = T, trace = 10)
 
 # rda.sel
 # Call: rda(formula = gt_data ~ bio9 + bio2 + bio15 + bio16 + bio13, data
@@ -82,6 +83,13 @@ usdm::vifcor(env.predictors[,c(9, 2, 15, 16)], th=10)
 # 3     bio15 4.362175
 # 4     bio16 1.266282
 
+# remove bio15! 
+usdm::vifcor(env.predictors[,c(9, 2, 16)], th=10)
+# ---------- VIFs of the remained variables -------- 
+#   Variables      VIF
+# 1      bio9 1.951767
+# 2      bio2 1.839526
+# 3     bio16 1.084348
 
 ## adding snow variable
 
@@ -94,7 +102,8 @@ rda.sel.ns <- rda(gt_data ~ bio9 + bio2 + bio15 + bio16, data = env.predictors, 
 # $adj.r.squared
 # [1] 0.09819832
 
-rda.sel.sd <- rda(gt_data ~ bio9 + bio2 + bio15 + bio16 + mean_snow_days, data = env.predictors, scale = T)
+rda.sel.sd <- rda(gt_data ~ bio9 + bio2 + bio15 + bio16 + mean_snow_days,
+                  data = env.predictors, scale = T)
 # RsquareAdj(rda.sel.sd)
 # $r.squared
 # [1] 0.1660375
@@ -102,16 +111,11 @@ rda.sel.sd <- rda(gt_data ~ bio9 + bio2 + bio15 + bio16 + mean_snow_days, data =
 # $adj.r.squared
 # [1] 0.09984998
 
-rda.sel.jd <- rda(gt_data ~ bio9 + bio2 + bio15 + bio16 + jan_mean_depth, data = env.predictors, scale = T)
-# RsquareAdj(rda.sel.jd)
-# $r.squared
-# [1] 0.1653665
-# 
-# $adj.r.squared
-# [1] 0.09912574
+
 
 # vif with the addition of mean snow days
 usdm::vifcor(env.predictors[,c(9, 2, 15, 16, 21)], th=10)
+# max correlation ( mean_snow_days ~ bio9 ):  -0.8321142 
 # ---------- VIFs of the remained variables -------- 
 #   Variables      VIF
 # 1           bio9 6.049206
@@ -119,6 +123,28 @@ usdm::vifcor(env.predictors[,c(9, 2, 15, 16, 21)], th=10)
 # 3          bio15 5.410557
 # 4          bio16 1.318614
 # 5 mean_snow_days 4.119881
+
+rda.sel.jd <- rda(gt_data ~ bio9 + bio2 + bio15 + bio16 + jan_mean_depth,
+                  data = env.predictors, scale = T)
+# RsquareAdj(rda.sel.jd)
+# $r.squared
+# [1] 0.1653665
+# 
+# $adj.r.squared
+# [1] 0.09912574
+
+
+# vif with the addition of january depth
+usdm::vifcor(env.predictors[,c(9, 2, 15, 16, 20)], th=10)
+# max correlation ( bio2 ~ bio9 ):  -0.6729578 
+# 
+# ---------- VIFs of the remained variables -------- 
+#   Variables      VIF
+# 1           bio9 3.015221
+# 2           bio2 3.837336
+# 3          bio15 6.408592
+# 4          bio16 1.346865
+# 5 jan_mean_depth 1.546143
 
 ## anovas
 
@@ -137,8 +163,9 @@ usdm::vifcor(env.predictors[,c(9, 2, 15, 16, 21)], th=10)
 # anova(rda.sel.ns)
 
 # # correlograms
-pdf("2-Preparing_Environmental_Data/plots/model_vars_pairs_panels.pdf", width = 13, height = 13)
-pairs.panels(env.predictors[,c(9, 2, 15, 16, 21)], scale=T, cex.cor = 1.5)
+pdf("2-Preparing_Environmental_Data/plots/model_vars_pairs_panels.pdf",
+    width = 13, height = 13)
+pairs.panels(env.predictors[,c(9, 2, 13, 15, 16, 20, 21)], scale=T, cex.cor = 1.5)
 dev.off()
 
 
