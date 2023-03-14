@@ -71,9 +71,9 @@ done
 
 ### step 4 - Genomic Windows with GenWin
 
-GenWin is a program that trys to detect inflection points in summary statistics calculated in a locus per locus manner (e.g. Fst). Using these inflection points it will divide the genome in windows which are not of arbitrary size, but based on properties of the summary statistic values. The program will output the number of SNPs inside each window and give a summary value based on the spline (Wstat). Wstat is a value that depends on the mean of the summary statistic, weighted against the mean and standard deviation of the dataset and the number of SNPs inside each window.
+[GenWin](https://gsejournal.biomedcentral.com/articles/10.1186/s12711-015-0105-9) is a program that trys to detect inflection points in summary statistics calculated in a locus per locus manner (e.g. Fst). Using these inflection points it will divide the genome in windows which are not of arbitrary size, but based on properties of the summary statistic values. The program will output the number of SNPs inside each window and give a summary value based on the spline (Wstat). Wstat is a value that depends on the mean of the summary statistic, weighted against the mean and standard deviation of the dataset and the number of SNPs inside each window.
 
-Wstat can be then used to calculate outlier windows with a quantile criteria (e.g. above 99.9% as done in the GenWin paper).
+Wstat can be then used to calculate outlier windows with a quantile criteria (e.g. above 99.9% as done in the [GenWin paper](https://gsejournal.biomedcentral.com/articles/10.1186/s12711-015-0105-9)).
 
 Using a custom [R script](code/run_genwin.R) for each selected variable, I will use it to divide the Lynx lynx genome in windows based on the Bayes Factor summary statistic from BayPass. Outlier windows are saved as TSV and BED for downstream analyses.
 
@@ -87,7 +87,7 @@ done
 
 ### step 5 - Multivariate Analysis ReDundancy Analysis (RDA)
 
-To run multivariate RDA using the pruned SNPs dataset as the response variables, the selected environmental predictors as explanatory variables and conditioning based on neutral genetic structure, I used the package vegan in a custom [R script](code/run_rda_exploration.R). 
+To run multivariate RDA using the pruned SNPs dataset as the response variables, the selected environmental predictors as explanatory variables and conditioning based on neutral genetic structure, I used the package [vegan](https://CRAN.R-project.org/package=vegan) in a custom [R script](code/run_rda_exploration.R). 
 
 This script allows the use of multiple combinations of environmental predictors and genetic structure conditioning which were saved in a formula file.
 
