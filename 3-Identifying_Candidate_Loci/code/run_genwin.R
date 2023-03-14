@@ -37,7 +37,7 @@ for (chr in chr_list){
 }
 
 # add outliers
-all_spline_outliers = add_wstat_outliers_column(all_spline)
+all_spline_outliers = add_wstat_outliers_column(all_spline, quant = 0.95)
 
 # save table
 write.table(x = all_spline_outliers,
@@ -53,3 +53,16 @@ outliers_bed = all_spline_outliers %>%
 write.table(x = outliers_bed,
             file = paste0(results_folder, var, "_genwin_windows_outliers.bed"),
             quote = F,  col.names = F, row.names = F, sep= "\t")
+
+
+
+p <- ggplot() +
+  geom_point(data=all_spline_outliers[which(all_spline_outliers$outlier == "no"),],
+             aes(x=WindowStart, y=Wstat),
+             color="grey32", shape=4, size=1.5) +
+  geom_point(data=all_spline_outliers[which(all_spline_outliers$outlier == "yes"),],
+             aes(x=WindowStart, y=Wstat),
+             color="gold2",shape=4, size=1.5) +
+  theme_minimal() +
+  facet_wrap(~ scaffold, scales = "free")
+p
