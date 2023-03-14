@@ -21,15 +21,13 @@ cond_list = strsplit(v_form[2], split = "+", fixed = T)[[1]]
 
 # prefix of plots
 plots_prefix = paste0("3-Identifying_Candidate_Loci/plots/",
-                      "vars_", str_replace_all(paste(vars_list, collapse = "-"),
-                                           "_", ""), ".",
-                      "cond_", paste(cond_list, collapse = "-"), ".")
+                      "vars_", v_form[1], ".",
+                      "cond_", v_form[2], ".")
 
 # prefix of tables
 table_prefix = paste0("3-Identifying_Candidate_Loci/tables/",
-                      "vars_", str_replace_all(paste(vars_list, collapse = "-"),
-                                               "_", ""), ".",
-                      "cond_", paste(cond_list, collapse = "-"), ".")
+                      "vars_", v_form[1], ".",
+                      "cond_", v_form[2], ".")
 
 ## ## ## ## ## ## 
 ## load data:  ##
@@ -56,6 +54,8 @@ variables = get_vars_df(PCs, env.predictors, vars_list = vars_list)
 # run RDA
 RDA = run_rda(gt_data = gt_data, variables = variables,
               vars_list = vars_list, cond_list = cond_list) #######
+
+print(paste("this rda r2 value is =", round(as.numeric(RsquareAdj(RDA)[1]), 3)))
 
 # plot inertia per axis
 plot_ord_x_inert_y(plot_name = paste0(plots_prefix, "inertia_per_axis.pdf"),
