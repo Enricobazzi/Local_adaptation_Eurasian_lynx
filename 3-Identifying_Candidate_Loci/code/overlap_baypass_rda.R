@@ -2,11 +2,70 @@
 ### load libraries ####
 
 library(tidyverse)
+library(RColorBrewer)
 library(GenomicRanges)
 # https://bioconductor.org/packages/devel/bioc/vignettes/GenomicRanges/inst/doc/GenomicRangesIntroduction.html
 
-### ### ### ### ### ### ### #
-### prepare the datasets ####
+# load a dictionary for the variables
+var_dict <- c("bio1" = "T_mean_year",
+              "bio2" = "T_range_day",
+              "bio3" = "Iso_T",
+              "bio4" = "T_seasonalit",
+              "bio5" = "T_max_warm",
+              "bio6" = "T_min_cold",
+              "bio7" = "T_range_year",
+              "bio8" = "T_wet_quart",
+              "bio9" = "T_dry_quart",
+              "bio10" = "T_warm_quart",
+              "bio11" = "T_cold_quart",
+              "bio12" = "P_annual",
+              "bio13" = "P_wet_month",
+              "bio14" = "P_dry_month",
+              "bio15" = "P_seasonality",
+              "bio16" = "P_wet_quart",
+              "bio17" = "P_dry_quart",
+              "bio18" = "P_warm_quart",
+              "bio19" = "P_cold_quart",
+              "jan_mean_depth" = "Jan_mean_depth",
+              "mean_snow_days" = "Mean_snow_days",
+              "Geographic" = "Geographic",
+              "xCoord" = "x-coord",
+              "yCoord" = "y-coord")
+
+### ###  ### ### ### ### 
+### parse arguments ####
+
+args = commandArgs(trailingOnly=TRUE)
+formula_file_line = args[1]
+
+# read formula table
+formula_file = "3-Identifying_Candidate_Loci/tables/rda_exploration_formulas.txt"
+form <- read.table(formula_file, header = T, sep = "\t")
+
+# calculate K based on PC condition
+if (form[formula_file_line,2] == "PC1+PC2"){
+  K = 2
+} else if (form[formula_file_line,2] == "PC2"){
+  K = 3
+}
+
+# read two components of the formula - [1] variables and [2] condition
+v_form <- c(form[formula_file_line,1], form[formula_file_line,2])
+
+# sd candidates table name
+sd_candidates_table = paste0("vars_", v_form[1],
+                             ".cond_", v_form[2],
+                             ".cand_sd.K", K,
+                             ".candidates.tsv")
+
+# qvals candidates table name
+qvals_candidates_table = paste0("vars_", v_form[1],
+                             ".cond_", v_form[2],
+                             ".cand_qvals.K", K,
+                             ".candidates.tsv")
+
+### ### ### ### ### ### ### ###
+###  prepare the datasets  ####
 
 print("preparing the datasets")
 
@@ -18,7 +77,7 @@ miss_gts_tsv = "1-Preparing_Genetic_Data/tables/finalset_missing_gts.tsv"
 
 ## outlier SNPs with standard deviation (loose)
 outlier_snps_sd = read.table(paste0(results_folder,
-                                    "vars_bio9-bio2-bio16-janmeandepth.cond_PC2.cand_sd.K3.candidates.tsv"),
+                                    sd_candidates_table),
                              header = T)
 # changing snp-name values because alt allele don't always match
 snps = c()
@@ -39,11 +98,11 @@ for (snp in outlier_snps_sd$snp){
 }
 outlier_snps_sd$snp = snps
 outlier_snps_sd$chromosome = chrs
-outlier_snps_sd$position = poss
+outlier_snps_sd$position = as.numeric(poss)
 
 ## outlier SNPs with q-values (strict)
 outlier_snps_qvals = read.table(paste0(results_folder,
-                                       "vars_bio9-bio2-bio16-janmeandepth.cond_PC2.cand_qvals.K3.candidates.tsv"),
+                                       qvals_candidates_table),
                                 header = T)
 # changing snp-name values because alt allele don't always match
 snps = c()
@@ -64,16 +123,16 @@ for (snp in outlier_snps_qvals$snp){
 }
 outlier_snps_qvals$snp = snps
 outlier_snps_qvals$chromosome = chrs
-outlier_snps_qvals$position = poss
+outlier_snps_qvals$position = as.numeric(poss)
 
-## add missing data
-miss_gts = read.table(miss_gts_tsv)
+## read missing data
+miss_gts = read.table(miss_gts_tsv, header = F, sep = "\t",
+                      comment.char = "",
+                      col.names = c("snp", "missing"))
 
-outlier_snps_sd$missing = miss_gts[which(
-  miss_gts$V1 %in% outlier_snps_sd$snp),2]
-
-outlier_snps_qvals$missing = miss_gts[which(
-  miss_gts$V1 %in% outlier_snps_qvals$snp),2]
+# add missing data
+outlier_snps_sd = merge(outlier_snps_sd, miss_gts, by = "snp")
+outlier_snps_qvals = merge(outlier_snps_qvals, miss_gts, by = "snp")
 
 
 ### ### ### ### ### ### ### ### ### ### ### ### ###
@@ -81,8 +140,8 @@ outlier_snps_qvals$missing = miss_gts[which(
 
 print("create unified genwin windows data frames")
 
-# => variables who's baypass result windows should be merged
-vars = c("bio9", "bio2", "bio16", "jan_mean_depth")
+# => variables who's BayPass result windows should be merged
+vars = strsplit(v_form[1], split = "+", fixed = T)[[1]]
 
 # data frames for outlier windows and all windows
 outlier_windows = data.frame()
@@ -171,9 +230,11 @@ for (vari in vars){
 }
 # write table
 write.table(overlap_summary,
-            "3-Identifying_Candidate_Loci/tables/overlap_summary_table.tsv",
+            paste0("3-Identifying_Candidate_Loci/tables/",
+                   "vars_", v_form[1],
+                   ".cond_", v_form[2],
+                   ".overlap_summary_table.tsv"),
             row.names = F, sep = "\t", col.names = T, quote = F)
-
 
 ### ### ### ### ### ### ### ### ### ### ### ### ### 
 ### venn diagram - overlap between variables ####
@@ -267,9 +328,11 @@ overlap_sd_win_nodup = candidate_win_sd_bed[which(!duplicated(candidate_win_sd_b
 
 # save bed
 write.table(overlap_sd_win_nodup,
-            "3-Identifying_Candidate_Loci/tables/overlap_sd_win_nodup.bed",
+            paste0("3-Identifying_Candidate_Loci/tables/",
+                   "vars_", v_form[1],
+                   ".cond_", v_form[2],
+                   ".overlap_sd_win_nodup.bed"),
             row.names = F, sep = "\t", col.names = F, quote = F)
-
 
 # remove "duplicate" snps
 # (are in same window and we keep the highest scoring without missing data)
@@ -280,7 +343,10 @@ overlap_sd_snps_nodup = overlap_sd_snps_nodup[!duplicated(overlap_sd_snps_nodup$
 
 # save table
 write.table(overlap_sd_snps_nodup,
-            "3-Identifying_Candidate_Loci/tables/overlap_sd_snps_nodup.tsv",
+            paste0("3-Identifying_Candidate_Loci/tables/",
+                   "vars_", v_form[1],
+                   ".cond_", v_form[2],
+                   ".overlap_sd_snps_nodup.tsv"),
             row.names = F, sep = "\t")
 
 # save bed
@@ -289,9 +355,11 @@ overlap_sd_snps_nodup_bed = data.frame(chromosome = overlap_sd_snps_nodup$chr,
                                        end = overlap_sd_snps_nodup$position)
 
 write.table(overlap_sd_snps_nodup_bed,
-            "3-Identifying_Candidate_Loci/tables/overlap_sd_snps_nodup.bed",
+            paste0("3-Identifying_Candidate_Loci/tables/",
+                   "vars_", v_form[1],
+                   ".cond_", v_form[2],
+                   ".overlap_sd_snps_nodup.bed"),
             row.names = F, sep = "\t", col.names = F, quote = F)
-
 
 ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### 
 ### qvals outliers - generate overlap window and snps beds #### 
@@ -331,7 +399,10 @@ overlap_qvals_win_nodup = candidate_win_qvals_bed[which(!duplicated(candidate_wi
 
 # save bed
 write.table(overlap_qvals_win_nodup,
-            "3-Identifying_Candidate_Loci/tables/overlap_qvals_win_nodup.bed",
+            paste0("3-Identifying_Candidate_Loci/tables/",
+                   "vars_", v_form[1],
+                   ".cond_", v_form[2],
+                   ".overlap_qvals_win_nodup.bed"),
             row.names = F, sep = "\t", col.names = F, quote = F)
 
 
@@ -344,7 +415,10 @@ overlap_qvals_snps_nodup = overlap_qvals_snps_nodup[!duplicated(overlap_qvals_sn
 
 # save table
 write.table(overlap_qvals_snps_nodup,
-            "3-Identifying_Candidate_Loci/tables/overlap_qvals_snps_nodup.tsv",
+            paste0("3-Identifying_Candidate_Loci/tables/",
+                   "vars_", v_form[1],
+                   ".cond_", v_form[2],
+                   ".overlap_qvals_snps_nodup.tsv"),
             row.names = F, sep = "\t")
 
 # save bed
@@ -353,10 +427,118 @@ overlap_qvals_snps_nodup_bed = data.frame(chromosome = overlap_qvals_snps_nodup$
                                           end = overlap_qvals_snps_nodup$position)
 
 write.table(overlap_qvals_snps_nodup_bed,
-            "3-Identifying_Candidate_Loci/tables/overlap_qvals_snps_nodup.bed",
+            paste0("3-Identifying_Candidate_Loci/tables/",
+                   "vars_", v_form[1],
+                   ".cond_", v_form[2],
+                   ".overlap_qvals_snps_nodup.bed"),
             row.names = F, sep = "\t", col.names = F, quote = F)
 
 
  ### ### ### ### ### ### 
 ### manhattan plots ####
 
+for (var in vars) {
+  print(var)
+  
+  # subset variable and prepare vectors for storing overlap
+  var_wins <- sorted_all_windows %>% filter(variable == var)
+  
+  var_wins_overlaps <- data.frame()
+  
+  # loop through windows registering overlaps between
+  # outlier windows of baypass and outlier snps of rda
+  for (w in 1:nrow(var_wins)){
+    message('\r', round((w / nrow(var_wins) * 100), 2), appendLF = FALSE)
+    
+    # extract window
+    window = var_wins[w,]
+    
+    # overlapping sd snps
+    ol_sd = outlier_snps_sd[outlier_snps_sd$chromosome == window$scaffold,]
+    ol_sd = ol_sd[ol_sd$position >= window$WindowStart,]
+    ol_sd = ol_sd[ol_sd$position <= window$WindowStop,]
+    ol_sd = nrow(ol_sd)
+    
+    # add yes or no based on if there is overlap
+    if (ol_sd > 0){
+      cand_sd = "yes"
+    } else {
+      cand_sd = "no"
+    }
+    
+    # add number of overlapping snps
+    # n_snps_sd[w] = ol_sd
+    
+    # overlapping qvals snps
+    ol_qvals = outlier_snps_qvals[outlier_snps_qvals$chromosome == window$scaffold,]
+    ol_qvals = ol_qvals[ol_qvals$position >= window$WindowStart,]
+    ol_qvals = ol_qvals[ol_qvals$position <= window$WindowStop,]
+    ol_qvals = nrow(ol_qvals)
+    
+    # add yes or no based on if there is overlap
+    if (ol_qvals > 0){
+      cand_qvals = "yes"
+    } else {
+      cand_qvals = "no"
+    }
+    
+    win_ol <- data.frame(sd_cand = cand_sd, n_snps_sd = ol_sd,
+                         qvals_cand = cand_qvals, n_snps_qvals = ol_qvals)
+    
+    var_wins_overlaps <- rbind(var_wins_overlaps, win_ol)
+    
+  }
+  
+  var_wins <- cbind(var_wins, var_wins_overlaps)
+  
+  # add overlaps windownumbers and colors to dataframe for plotting
+  var_wins$WindowNumber <- 1:nrow(var_wins)
+  var_wins$color <- ifelse(var_wins$n_snps_sd == 0, "grey32",
+                           ifelse(var_wins$n_snps_sd == 1, brewer.pal(11,"RdYlBu")[10],
+                                  ifelse(var_wins$n_snps_sd == 2, brewer.pal(11,"RdYlBu")[8],
+                                         ifelse(var_wins$n_snps_sd == 3, brewer.pal(11,"RdYlBu")[6],
+                                                ifelse(var_wins$n_snps_sd == 4, brewer.pal(11,"RdYlBu")[4],
+                                                       ifelse(var_wins$n_snps_sd == 5, brewer.pal(11,"RdYlBu")[2],
+                                                              ifelse(var_wins$n_snps_sd > 5, brewer.pal(8,"Dark2")[4], 
+                                                                     brewer.pal(8,"Dark2")[8])))))))
+  display.brewer.pal(8,"Dark2")
+  # windows that are not outliers of any method
+  crapwins <- var_wins %>%
+    filter(outlier == "no" & sd_cand == "no" & qvals_cand == "no")
+  
+  # windows that are outliers of baypass but not of rda
+  bpout_nosnp <- var_wins %>%
+    filter(outlier == "yes" & sd_cand == "no" & qvals_cand == "no")
+  
+  # windows that are outliers of baypass and of rda SD but not rda qvals
+  bpout_sdout_noqval <- var_wins %>%
+    filter(outlier == "yes" & sd_cand == "yes" & qvals_cand == "no")
+  
+  # windows that are outliers of baypass and of rda SD and rda qvals
+  bpout_sdout_qvalout <- var_wins %>%
+    filter(outlier == "yes" & sd_cand == "yes" & qvals_cand == "yes")
+  
+  # plot
+  p <- ggplot() +
+    geom_point(data=crapwins, aes(x=WindowNumber, y=Wstat),
+               color="grey32", shape=4, size=1.5) +
+    geom_point(data=bpout_nosnp, aes(x=WindowNumber, y=Wstat),
+               color="gold2",shape=4, size=1.5) +
+    geom_point(data=bpout_sdout_noqval, aes(x=WindowNumber, y=Wstat),
+               color="grey32", fill="darkorange", shape=21, size=3) +
+    geom_point(data=bpout_sdout_qvalout, aes(x=WindowNumber, y=Wstat),
+               color="grey32", fill="darkorange", shape=21, size=3) +
+    xlab("Window Number") +
+    ggtitle(as.vector(var_dict[var])) +
+    theme_minimal() +
+    theme(plot.title = element_text(hjust = 0.5))
+  p
+  # facet_wrap(~ scaffold, scales = "free_x")
+  
+  ggsave(filename = paste0("3-Identifying_Candidate_Loci/plots/", var,
+                           "_windows_overlap_",
+                           "vars_", v_form[1],
+                           ".cond_", v_form[2], 
+                           "_manhattan.pdf"),
+         plot = p, width = 6, height = 3, units = "in")
+}
