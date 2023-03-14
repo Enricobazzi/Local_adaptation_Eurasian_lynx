@@ -45,12 +45,21 @@ PCs <- PCs[match(rownames(env.predictors), rownames(PCs)),]
 # build matrix with all components I want to include in full model => selected variables + genetic structure + geography
 
 # first a data.matrix to get all values as numeric
-variables <- data.matrix(cbind(data.frame(PCs), data.frame(env.predictors[,c(9, 2, 15, 16, 21)]), data.frame(coord_table[,c(1,2)])))
+variables <- data.matrix(cbind(data.frame(PCs), data.frame(env.predictors[,c(9, 2, 13, 15, 16, 20, 21)]), data.frame(coord_table[,c(1,2)])))
 
 # plot correlations:
 M <- cor(variables)
+rownames(M) <- c("PC1", "PC2", "PC3",
+                 "T_dry_quart", "T_range_day", "P_seasonality",
+                 "P_wet_quart", "Jan_mean_depth", "Mean_snow_days",
+                 "longitude", "latitude")
+colnames(M) <- c("PC1", "PC2", "PC3",
+                 "T_dry_quart", "T_range_day", "P_seasonality",
+                 "P_wet_quart", "Jan_mean_depth", "Mean_snow_days",
+                 "longitude", "latitude")
+
 pdf("2-Preparing_Environmental_Data/plots/model_vars_correlogram.pdf", width = 8, height = 8)
-corrplot(M, type="upper", col=brewer.pal(n=8, name="RdYlBu"))
+corrplot(M, type="upper", col=brewer.pal(n=8, name="RdYlBu"), addCoef.col = "black")
 dev.off()
 
 # convert variables to data frame again
@@ -126,6 +135,8 @@ pRDAstruct <- rda(gt_data ~ PC1 + PC2 + PC3 +
 # Residual 58   713344
 # ---
 #   Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+## pure geographic structure model
 
 pRDAgeog <- rda(gt_data ~ longitude + latitude +
                   Condition(PC1 + PC2 + PC3 + bio9 + bio2 + bio15 + bio16 + mean_snow_days),
