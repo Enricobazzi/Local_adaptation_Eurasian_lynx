@@ -30,7 +30,7 @@ make_baypass_results_df_of_var <- function(results_folder, var){
   # Add SNP ID information from SNPIDs table
   SNPIDs <- read_tsv(paste0(results_folder, "finalset.maf5pc.SNPIDs"),
                      col_names = F, show_col_types = F)[,2-3] %>%
-    rename("scaffold" =  X2, "position" = X3)
+    rename("X2" = "scaffold", "X3" = "position")
   
   # make data frame with scaffold, position, snp number, and bayes factor score
   baypass_results_df <- data.frame(scaffold = SNPIDs$scaffold,
