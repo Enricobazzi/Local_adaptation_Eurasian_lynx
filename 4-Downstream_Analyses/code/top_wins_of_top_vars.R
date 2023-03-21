@@ -36,6 +36,16 @@ results_folder = "3-Identifying_Candidate_Loci/tables/"
 ## missing genotypes table
 miss_gts_tsv = "1-Preparing_Genetic_Data/tables/finalset_missing_gts.tsv"
 
+## genes
+# genes_gff3 = "4-Downstream_Analyses/tables/lc4.genes.gff3"
+# 
+# genes = read.table(genes_gff3, header = FALSE, sep = "\t",
+#                    nrows = 19340)[,c(1,4,5,9)]
+# 
+# colnames(genes) = c("chromosome", "start", "end", "gene")
+# 
+# genes$gene = sapply(str_split(sapply(str_split(genes$gene, ";"), "[[", 5), "="), "[[", 2)
+
 ## outlier SNPs with standard deviation (loose)
 outlier_snps_sd = read.table(paste0(results_folder,
                                     sd_candidates_table),
@@ -96,8 +106,25 @@ for (var in vars){
   }
   var_wins$overlap_sd <- n_snps_sd
   
-  top_adaptive_wins <- filter(var_wins, overlap_sd > 0) %>%
-    arrange(desc(Wstat)) %>% head(20)
+  top_adaptive_wins <- filter(var_wins, overlap_sd > 0)
+  
+  write.table(top_adaptive_wins,
+              paste0("4-Downstream_Analyses/tables/",
+                     var, "_top_adaptive_wins.tsv"),
+              row.names = F, sep = "\t", col.names = T, quote = F)
+  
+  # genes_vec <- c()
+  # for (w in 1:nrow(top_adaptive_wins)){
+  #   message('\r', round((w / nrow(top_adaptive_wins) * 100), 2), appendLF = FALSE)
+  #   window = top_adaptive_wins[w,]
+  #   # overlapping genes (± 20kbp)
+  #   ol_genes = genes %>%
+  #     filter(chromosome == window$scaffold & start >=  window$WindowStart - 20000 & end <= window$WindowStop + 20000)
+  #   # add gene
+  #   genes_vec <- c(genes_vec, ifelse(nrow(ol_genes) > 0, ol_genes$gene, NA))
+  # }
+  # 
+  # top_adaptive_wins$gene <- genes_vec
   
   top_adaptive_wins_bed <- data.frame(
     chr = top_adaptive_wins$scaffold,
