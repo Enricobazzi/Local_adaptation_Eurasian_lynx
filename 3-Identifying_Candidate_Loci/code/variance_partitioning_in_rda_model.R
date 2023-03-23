@@ -58,8 +58,10 @@ colnames(M) <- c("PC1", "PC2", "PC3",
                  "P_wet_quart", "Jan_mean_depth", "Mean_snow_days",
                  "longitude", "latitude")
 
-pdf("2-Preparing_Environmental_Data/plots/model_vars_correlogram.pdf", width = 8, height = 8)
-corrplot(M, type="upper", col=brewer.pal(n=8, name="RdYlBu"), addCoef.col = "black")
+pdf("2-Preparing_Environmental_Data/plots/model_vars_correlogram.pdf",
+    width = 8, height = 8)
+corrplot(M, type="upper", col=brewer.pal(n=8, name="RdYlBu"),
+         addCoef.col = "black")
 dev.off()
 
 # convert variables to data frame again
