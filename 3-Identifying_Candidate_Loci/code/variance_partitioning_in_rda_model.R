@@ -50,11 +50,11 @@ variables <- data.matrix(cbind(data.frame(PCs), data.frame(env.predictors[,c(9, 
 # plot correlations:
 M <- cor(variables)
 rownames(M) <- c("PC1", "PC2", "PC3",
-                 "T_dry_quart", "T_range_day", "P_seasonality",
+                 "T_dry_quart", "T_range_day", "P_wet_month", "P_seasonality",
                  "P_wet_quart", "Jan_mean_depth", "Mean_snow_days",
                  "longitude", "latitude")
 colnames(M) <- c("PC1", "PC2", "PC3",
-                 "T_dry_quart", "T_range_day", "P_seasonality",
+                 "T_dry_quart", "T_range_day", "P_wet_month", "P_seasonality",
                  "P_wet_quart", "Jan_mean_depth", "Mean_snow_days",
                  "longitude", "latitude")
 

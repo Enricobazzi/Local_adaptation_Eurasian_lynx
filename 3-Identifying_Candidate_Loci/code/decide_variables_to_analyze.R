@@ -65,7 +65,7 @@ rda.sel <- ordiR2step(rda.0, rda.all, Pin = 0.01, R2permutations = 1000,
 
 ## VIF calculations
 
-usdm::vifcor(env.predictors[,c(9, 2, 15, 16)], th=10)
+usdm::vifcor(env.predictors[,c(9, 2, 15, 16, 13)], th=10)
 # ---------- VIFs of the remained variables -------- 
 #   Variables       VIF
 # 1      bio9  3.040581
